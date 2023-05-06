@@ -25,6 +25,42 @@ import {getTinyMCE} from 'editor_tiny/loader';
 import {getPluginMetadata} from 'editor_tiny/utils';
 
 import {component, pluginName} from './common';
+import {html_beautify} from './beautify/beautify-html';
+
+const beautifyOptions = {
+    indent_size: 2,
+    wrap_line_length: 80,
+    unformatted: [],
+};
+
+const windowManagerConfig = {
+    title: 'Source code',
+    size: 'large',
+    body: {
+        type: 'panel',
+        items: [
+            {
+                type: 'textarea',
+                name: 'code',
+            },
+        ],
+    },
+    buttons: [
+        {
+            type: 'cancel',
+            name: 'cancel',
+            text: 'Cancel',
+        },
+        {
+            type: 'submit',
+            name: 'save',
+            text: 'Save',
+            primary: true,
+        },
+    ],
+    initialData: null,
+    onSubmit: null,
+};
 
 // Setup the tiny_html Plugin.
 export default new Promise(async(resolve) => {
@@ -41,6 +77,29 @@ export default new Promise(async(resolve) => {
     // Reminder: Any asynchronous code must be run before this point.
     tinyMCE.PluginManager.add(pluginName, (editor) => {
         // Return the pluginMetadata object. This is used by TinyMCE to display a help link for your plugin.
+
+        // Overriding the default 'mceCodeEditor' command
+        editor.addCommand('mceCodeEditor', () => {
+            // Get the current content of the editor
+            const content = editor.getContent({source_view: true});
+
+            // Beautify the content using html_beautify
+            const beautifiedContent = html_beautify(content, beautifyOptions);
+
+            // Create a new window to display the beautified code
+            const dialog = editor.windowManager.open({
+                ...windowManagerConfig,
+                initialData: {
+                    code: beautifiedContent,
+                },
+                onSubmit: function(api) {
+                    const data = api.getData();
+                    editor.setContent(data.code, {source_view: true});
+                    api.close();
+                },
+            });
+        });
+
         return pluginMetadata;
     });
 
