@@ -27,6 +27,8 @@ import {getPluginMetadata} from 'editor_tiny/utils';
 import {component, pluginName} from './common';
 import {html_beautify} from './beautify/beautify-html';
 
+import {basicSetup, EditorView, html} from './codemirror/codemirror';
+
 const beautifyOptions = {
     indent_size: 2,
     wrap_line_length: 80,
@@ -40,8 +42,8 @@ const windowManagerConfig = {
         type: 'panel',
         items: [
             {
-                type: 'textarea',
-                name: 'code',
+                type: 'htmlpanel',
+                html: '<div id="codeMirrorContainer" style="height: 100%;"></div>',
             },
         ],
     },
@@ -86,15 +88,27 @@ export default new Promise(async(resolve) => {
             // Beautify the content using html_beautify
             const beautifiedContent = html_beautify(content, beautifyOptions);
 
+            // Create the CodeMirror instance
+            let cmInstance;
+
             // Create a new window to display the beautified code
-            const dialog = editor.windowManager.open({
+            editor.windowManager.open({
                 ...windowManagerConfig,
-                initialData: {
-                    code: beautifiedContent,
+                onAction: () => {
+                    const container = document.getElementById('codeMirrorContainer');
+                    window.console.log('we are open');
+                    window.console.log(container);
+                    cmInstance = new EditorView({
+                        state: EditorView.create({
+                            doc: beautifiedContent,
+                            extensions: [basicSetup, html()],
+                        }),
+                        parent: container,
+                    });
                 },
-                onSubmit: function(api) {
-                    const data = api.getData();
-                    editor.setContent(data.code, {source_view: true});
+                onSubmit: (api) => {
+                    const cmContent = cmInstance.state.doc.toString();
+                    editor.setContent(cmContent, {source_view: true});
                     api.close();
                 },
             });

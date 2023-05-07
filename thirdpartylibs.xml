@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<libraries>
+  <library>
+    <location>amd/src/codemirror</location>
+    <name>codemirror</name>
+    <description>CodeMirror is a versatile text editor implemented in JavaScript for the browser.</description>
+    <version>6.0.1</version>
+    <license>MIT</license>
+    <repository>https://github.com/codemirror/</repository>
+  </library>
+</libraries>
