@@ -27,7 +27,8 @@ import {getPluginMetadata} from 'editor_tiny/utils';
 import {component, pluginName} from './common';
 import {html_beautify} from './beautify/beautify-html';
 
-import {basicSetup, EditorView, html} from './codemirror/codemirror';
+import {EditorState, EditorView} from './codemirror/codemirror';
+import {basicSetup} from './codemirror/editor';
 
 const beautifyOptions = {
     indent_size: 2,
@@ -78,8 +79,6 @@ export default new Promise(async(resolve) => {
 
     // Reminder: Any asynchronous code must be run before this point.
     tinyMCE.PluginManager.add(pluginName, (editor) => {
-        // Return the pluginMetadata object. This is used by TinyMCE to display a help link for your plugin.
-
         // Overriding the default 'mceCodeEditor' command
         editor.addCommand('mceCodeEditor', () => {
             // Get the current content of the editor
@@ -91,29 +90,30 @@ export default new Promise(async(resolve) => {
             // Create the CodeMirror instance
             let cmInstance;
 
+            window.console.log(basicSetup);
+
+            let state = EditorState.create({
+                doc: beautifiedContent,
+                extensions: undefined // This is where basicSetup should go as [basicSetup, ...].
+            });
+
             // Create a new window to display the beautified code
             editor.windowManager.open({
                 ...windowManagerConfig,
-                onAction: () => {
-                    const container = document.getElementById('codeMirrorContainer');
-                    window.console.log('we are open');
-                    window.console.log(container);
-                    cmInstance = new EditorView({
-                        state: EditorView.create({
-                            doc: beautifiedContent,
-                            extensions: [basicSetup, html()],
-                        }),
-                        parent: container,
-                    });
-                },
                 onSubmit: (api) => {
                     const cmContent = cmInstance.state.doc.toString();
                     editor.setContent(cmContent, {source_view: true});
                     api.close();
                 },
             });
-        });
 
+            const container = document.getElementById('codeMirrorContainer');
+            cmInstance = new EditorView({
+                state,
+                parent: container,
+            });
+        });
+        // Return the pluginMetadata object. This is used by TinyMCE to display a help link for your plugin.
         return pluginMetadata;
     });
 
