@@ -32,7 +32,7 @@ import {
     EditorView,
     basicSetup,
     lang,
-} from './codemirror';
+} from './codemirror-lazy';
 
 const beautifyOptions = {
     indent_size: 2,

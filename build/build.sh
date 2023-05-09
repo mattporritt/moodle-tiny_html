@@ -17,5 +17,5 @@ npm install --no-save \
 npx rollup \
   ./codemirror.mjs \
   -f esm \
-  -o ../amd/src/codemirror.js \
+  -o ../amd/src/codemirror-lazy.js \
   -p @rollup/plugin-node-resolve
