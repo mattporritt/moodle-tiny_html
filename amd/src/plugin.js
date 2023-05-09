@@ -94,13 +94,12 @@ export default new Promise(async(resolve) => {
             // Create the CodeMirror instance
             let cmInstance;
 
-            window.console.log(basicSetup);
-
             let state = EditorState.create({
                 doc: beautifiedContent,
                 // This is where basicSetup should go as [basicSetup, ...].
                 extensions: [
                     basicSetup,
+                    EditorState.tabSize.of(2),
                     // Bring in all language extensions.
                     ...Object.entries(lang).map(([, languagePlugin]) => languagePlugin()),
                 ],
@@ -117,9 +116,13 @@ export default new Promise(async(resolve) => {
             });
 
             const container = document.getElementById('codeMirrorContainer');
+            // Create a shadow root for the CodeMirror instance.
+            // This is required to prevent the TinyMCE editor styles from overriding the CodeMirror ones.
+            const shadowRoot = container.attachShadow({mode: "open"});
+
             cmInstance = new EditorView({
                 state,
-                parent: container,
+                parent: shadowRoot,
             });
         });
         // Return the pluginMetadata object. This is used by TinyMCE to display a help link for your plugin.
