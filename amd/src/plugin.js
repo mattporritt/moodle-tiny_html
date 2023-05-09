@@ -27,8 +27,12 @@ import {getPluginMetadata} from 'editor_tiny/utils';
 import {component, pluginName} from './common';
 import {html_beautify} from './beautify/beautify-html';
 
-import {EditorState, EditorView} from './codemirror/codemirror';
-import {basicSetup} from './codemirror/editor';
+import {
+    EditorState,
+    EditorView,
+    basicSetup,
+    lang,
+} from './codemirror';
 
 const beautifyOptions = {
     indent_size: 2,
@@ -94,7 +98,12 @@ export default new Promise(async(resolve) => {
 
             let state = EditorState.create({
                 doc: beautifiedContent,
-                extensions: undefined // This is where basicSetup should go as [basicSetup, ...].
+                // This is where basicSetup should go as [basicSetup, ...].
+                extensions: [
+                    basicSetup,
+                    // Bring in all language extensions.
+                    ...Object.entries(lang).map(([, languagePlugin]) => languagePlugin()),
+                ],
             });
 
             // Create a new window to display the beautified code
