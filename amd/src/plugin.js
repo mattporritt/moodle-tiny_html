@@ -120,9 +120,25 @@ export default new Promise(async(resolve) => {
             // This is required to prevent the TinyMCE editor styles from overriding the CodeMirror ones.
             const shadowRoot = container.attachShadow({mode: "open"});
 
+            // Add the styles to the shadow root
+            const style = document.createElement('style');
+            style.textContent = `
+                  .my-codemirror-container {
+                    position: relative;
+                    height: clamp(50vh, 80vh, 90vh);
+                    overflow: scroll;
+                  }
+                `;
+            shadowRoot.appendChild(style);
+
+            // Create a new div and add the class 'my-codemirror-container'
+            const div = document.createElement('div');
+            div.classList.add('my-codemirror-container');
+            shadowRoot.appendChild(div);
+
             cmInstance = new EditorView({
                 state,
-                parent: shadowRoot,
+                parent: div,
             });
         });
         // Return the pluginMetadata object. This is used by TinyMCE to display a help link for your plugin.
