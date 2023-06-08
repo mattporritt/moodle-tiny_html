@@ -125,8 +125,10 @@ export default new Promise(async(resolve) => {
             style.textContent = `
                   .my-codemirror-container {
                     position: relative;
-                    height: clamp(50vh, 80vh, 90vh);
                     overflow: scroll;
+                    height: calc(80vh - 100px);
+                    border: 1px solid;
+                    border-radius: 5px;
                   }
                 `;
             shadowRoot.appendChild(style);
