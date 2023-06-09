@@ -24,7 +24,7 @@
 import {getTinyMCE} from 'editor_tiny/loader';
 import {getPluginMetadata} from 'editor_tiny/utils';
 
-import {component, pluginName} from './common';
+import {component, pluginName, codeMirrorStyle} from './common';
 import {html_beautify} from './beautify/beautify-html';
 
 import {
@@ -34,12 +34,18 @@ import {
     lang,
 } from './codemirror-lazy';
 
+/**
+ * Options for the html_beautify function.
+ */
 const beautifyOptions = {
     indent_size: 2,
     wrap_line_length: 80,
     unformatted: [],
 };
 
+/**
+ * Configuration for TinyMCE editor the windowManager.
+ */
 const windowManagerConfig = {
     title: 'Source code',
     size: 'large',
@@ -122,23 +128,12 @@ export default new Promise(async(resolve) => {
 
             // Add the styles to the shadow root
             const style = document.createElement('style');
-            style.textContent = `
-                  .my-codemirror-container {
-                    position: absolute;
-                    top: 40px;
-                    bottom: 50px;
-                    left: 15px;
-                    right: 15px;
-                    overflow: scroll;
-                    border: 1px solid;
-                    border-radius: 5px;
-                  }
-                `;
+            style.textContent = codeMirrorStyle;
             shadowRoot.appendChild(style);
 
             // Create a new div and add the class 'my-codemirror-container'
             const div = document.createElement('div');
-            div.classList.add('my-codemirror-container');
+            div.classList.add('modal-codemirror-container');
             shadowRoot.appendChild(div);
 
             cmInstance = new EditorView({

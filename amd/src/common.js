@@ -26,4 +26,16 @@ const component = 'tiny_html';
 export default {
     component,
     pluginName: `${component}/plugin`,
+    codeMirrorStyle: `
+                  .modal-codemirror-container {
+                    position: absolute;
+                    top: 40px;
+                    bottom: 50px;
+                    left: 15px;
+                    right: 15px;
+                    overflow: scroll;
+                    border: 1px solid #c7cace;
+                    border-radius: 5px;
+                  }
+                `
 };
