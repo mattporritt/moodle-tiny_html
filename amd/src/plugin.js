@@ -124,9 +124,12 @@ export default new Promise(async(resolve) => {
             const style = document.createElement('style');
             style.textContent = `
                   .my-codemirror-container {
-                    position: relative;
+                    position: absolute;
+                    top: 40px;
+                    bottom: 50px;
+                    left: 15px;
+                    right: 15px;
                     overflow: scroll;
-                    height: calc(80vh - 100px);
                     border: 1px solid;
                     border-radius: 5px;
                   }
