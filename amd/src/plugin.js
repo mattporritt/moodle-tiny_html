@@ -26,6 +26,7 @@ import {getPluginMetadata} from 'editor_tiny/utils';
 
 import {component, pluginName, codeMirrorStyle} from './common';
 import {html_beautify} from './beautify/beautify-html';
+import {get_strings} from 'core/str';
 
 import {
     EditorState,
@@ -44,7 +45,7 @@ const beautifyOptions = {
 };
 
 /**
- * Configuration for TinyMCE editor the windowManager.
+ * Initial configuration for TinyMCE editor the windowManager.
  */
 const windowManagerConfig = {
     title: 'Source code',
@@ -58,17 +59,7 @@ const windowManagerConfig = {
             },
         ],
     },
-    buttons: [
-        {
-            type: 'cancel',
-            text: 'Cancelzzz',
-        },
-        {
-            type: 'submit',
-            text: 'Save',
-            primary: true,
-        },
-    ],
+    buttons: null,
     initialData: null,
     onSubmit: null,
 };
@@ -80,9 +71,14 @@ export default new Promise(async(resolve) => {
     const [
         tinyMCE,
         pluginMetadata,
+        buttonStrings,
     ] = await Promise.all([
         getTinyMCE(),
         getPluginMetadata(component, pluginName),
+        get_strings([
+            {key: 'cancel', component: 'moodle'},
+            {key: 'save', component: 'moodle'},
+        ])
     ]);
 
     // Reminder: Any asynchronous code must be run before this point.
@@ -117,6 +113,17 @@ export default new Promise(async(resolve) => {
                     editor.setContent(cmContent, {source_view: true});
                     api.close();
                 },
+                buttons: [
+                    {
+                        type: 'cancel',
+                        text: buttonStrings[0],
+                    },
+                    {
+                        type: 'submit',
+                        text: buttonStrings[1],
+                        primary: true,
+                    },
+                ]
             });
 
             const container = document.getElementById('codeMirrorContainer');
@@ -142,14 +149,14 @@ export default new Promise(async(resolve) => {
 
             // Add an event listener to the shadow root to listen for the tab key press.
             shadowRoot.addEventListener('keydown', (event) => {
-                // If the tab key is pressed, prevent the default action and select the cancel button.
+                // If the tab key is pressed, prevent the default action and select the save button.
                 // We need to do this as the shadow root is not part of the DOM, so the tab key will not
                 // be caught by the TinyMCE dialog.
                 if (event.key === 'Tab') {
                     event.preventDefault();
                     const codeMirrorContainer = document.getElementById('codeMirrorContainer');
                     const dialogElement = codeMirrorContainer.closest('.tox-dialog');
-                    const cancelButton = dialogElement.querySelector('button[title="Cancelzzz"]');
+                    const cancelButton = dialogElement.querySelector('button[title="' + buttonStrings[1] + '"]');
                     cancelButton.focus();
                 }
             });
