@@ -61,12 +61,10 @@ const windowManagerConfig = {
     buttons: [
         {
             type: 'cancel',
-            name: 'cancel',
-            text: 'Cancel',
+            text: 'Cancelzzz',
         },
         {
             type: 'submit',
-            name: 'save',
             text: 'Save',
             primary: true,
         },
@@ -136,10 +134,26 @@ export default new Promise(async(resolve) => {
             div.classList.add('modal-codemirror-container');
             shadowRoot.appendChild(div);
 
+            // Create the CodeMirror instance
             cmInstance = new EditorView({
                 state,
                 parent: div,
             });
+
+            // Add an event listener to the shadow root to listen for the tab key press.
+            shadowRoot.addEventListener('keydown', (event) => {
+                // If the tab key is pressed, prevent the default action and select the cancel button.
+                // We need to do this as the shadow root is not part of the DOM, so the tab key will not
+                // be caught by the TinyMCE dialog.
+                if (event.key === 'Tab') {
+                    event.preventDefault();
+                    const codeMirrorContainer = document.getElementById('codeMirrorContainer');
+                    const dialogElement = codeMirrorContainer.closest('.tox-dialog');
+                    const cancelButton = dialogElement.querySelector('button[title="Cancelzzz"]');
+                    cancelButton.focus();
+                }
+            });
+
         });
         // Return the pluginMetadata object. This is used by TinyMCE to display a help link for your plugin.
         return pluginMetadata;
