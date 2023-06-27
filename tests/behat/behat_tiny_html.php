@@ -29,7 +29,7 @@ use Behat\Mink\Exception\DriverException;
 use Behat\Mink\Exception\ExpectationException;
 
 // NOTE: no MOODLE_INTERNAL test here, this file may be required by behat before including /config.php.
-require_once(__DIR__ . '/../../../../behat/behat_base.php');
+require_once(__DIR__ . '/../../../../tests/behat/behat_editor_tiny.php');
 
 /**
  * TinyMCE HTML plugin custom behat steps definitions.
@@ -38,26 +38,7 @@ require_once(__DIR__ . '/../../../../behat/behat_base.php');
  * @category   test
  * @copyright  2023 Matt Porritt <matt.porritt@moodle.com>
  */
-class behat_tiny_html extends behat_base {
-    /**
-     * Execute some JavaScript for a particular Editor instance.
-     *
-     * The editor instance is available on the 'instance' variable.
-     *
-     * @param string $editorid The ID of the editor
-     * @param string $code The code to execute
-     */
-    protected function execute_javascript_for_editor(string $editorid, string $code): void {
-        $js = <<<EOF
-        require(['editor_tiny/editor'], (editor) => {
-            const instance = editor.getInstanceForElementId('{$editorid}');
-            {$code}
-        });
-        EOF;
-
-        $this->execute_script($js);
-    }
-
+class behat_tiny_html extends behat_editor_tiny {
     /**
      * Select the element type/index for the specified TinyMCE editor.
      *
@@ -70,14 +51,32 @@ class behat_tiny_html extends behat_base {
 
         $editor = $this->get_textarea_for_locator($locator);
         $editorid = $editor->getAttribute('id');
+        error_log($editorid);
 
         // Ensure that a name is set on the iframe relating to the editorid.
         $js = <<<EOF
-            const element = instance.dom.select("{$textlocator}")[{$position}];
-            instance.selection.select(element);
+            const container = document.getElementById('codeMirrorContainer');
+            const shadowRoot = container.shadowRoot;
+            var allNodes = shadowRoot.querySelectorAll('*');
+            var textToFind = "This is my draft";
+            var foundElement = null;
+            
+            allNodes.forEach(function(node) {
+              if (node.textContent.includes(textToFind)) {
+                foundElement = node;
+              }
+            });
+            
+            if (foundElement) {
+              resolve('Text found in element: ' + foundElement.tagName);
+            } else {
+              resolve('Text not found.');
+            }
         EOF;
 
-        $this->execute_javascript_for_editor($editorid, $js);
+        $result = $this->evaluate_javascript_for_editor($editorid, $js);;
+        error_log($result);
+
     }
 
 }
