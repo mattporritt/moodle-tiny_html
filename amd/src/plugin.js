@@ -147,6 +147,9 @@ export default new Promise(async(resolve) => {
                 parent: div,
             });
 
+            // Attach the instance to the parent DOM element
+            div.codeMirrorInstance = cmInstance;
+
             // Add an event listener to the shadow root to listen for the tab key press.
             shadowRoot.addEventListener('keydown', (event) => {
                 // If the tab key is pressed, prevent the default action and select the save button.

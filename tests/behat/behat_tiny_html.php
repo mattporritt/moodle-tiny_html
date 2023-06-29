@@ -53,7 +53,6 @@ class behat_tiny_html extends behat_base {
 
         $editor = $this->get_textarea_for_locator($locator);
         $editorid = $editor->getAttribute('id');
-        error_log($editorid);
 
         // Ensure that a name is set on the iframe relating to the editorid.
         $js = <<<EOF
@@ -79,7 +78,7 @@ class behat_tiny_html extends behat_base {
      * Gets the specified formatted multiline source code from the editor
      * and compares it to what is expected.
      *
-     * @when /^I should see this multiline source code for the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor:$/
+     * @When /^I should see this multiline source code for the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor:$/
      * @throws ExpectationException
      * @param string $locator
      * @param PyStringNode $sourcecode
@@ -90,7 +89,6 @@ class behat_tiny_html extends behat_base {
 
         $editor = $this->get_textarea_for_locator($locator);
         $editorid = $editor->getAttribute('id');
-        error_log($editorid);
 
         // We need to traverse the shadow dom to get the source code.
         $js = <<<EOF
@@ -110,5 +108,40 @@ class behat_tiny_html extends behat_base {
         if ($result != 'true') {
             throw new ExpectationException("Source code is not indented as expected.", $this->getSession());
         }
+    }
+
+    /**
+     * Appends source code to the editor.
+     *
+     * @Then /^I add "(?P<textlocator_string>(?:[^"]|\\")*)" to the source code for the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor$/
+     * @param string $textlocator
+     * @param string $locator
+     * @return void
+     */
+    public function append_source_code(string $textlocator, string $locator): void {
+        $this->require_tiny_tags();
+
+        $editor = $this->get_textarea_for_locator($locator);
+        $editorid = $editor->getAttribute('id');
+        error_log($editorid);
+        error_log($textlocator);
+
+        // We need to traverse the shadow dom to get the source code.
+        $js = <<<EOF
+            const container = document.getElementById('codeMirrorContainer');
+            const shadowRoot = container.shadowRoot;
+            const codemirrorParent = shadowRoot.querySelector('.modal-codemirror-container');
+            var codeMirrorInstance = codemirrorParent.codeMirrorInstance;
+            var newContent = "$textlocator";
+            var tr = codeMirrorInstance.state.update({changes: { from: codeMirrorInstance.state.doc.length, insert: newContent }}); 
+            codeMirrorInstance.update([tr]);
+
+            shadowRoot.querySelector('.modal-codemirror-container [contenteditable="true"]').focus();
+
+            resolve(shadowRoot.querySelector('.modal-codemirror-container [contenteditable="true"]').innerText );
+        EOF;
+
+        $result = $this->evaluate_javascript_for_editor($editorid, $js);
+        error_log($result);
     }
 }

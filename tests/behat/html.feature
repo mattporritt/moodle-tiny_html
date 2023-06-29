@@ -9,7 +9,7 @@ Feature: Edit HTML in TinyMCE
     And I set the field "Description" to "<div><p>This is my draft</p></div>"
     And I click on the "View > Source code" menu item for the "Description" TinyMCE editor
     And I should see "Source code"
-    And I should see this multiline source code for the "Description" TinyMCE editor:
+    Then I should see this multiline source code for the "Description" TinyMCE editor:
       """
       <div>
         <p>This is my draft</p>
@@ -23,5 +23,16 @@ Feature: Edit HTML in TinyMCE
     And I click on the "View > Source code" menu item for the "Description" TinyMCE editor
     And I should see "Source code"
     And I should see "<p>This is my draft</p>" source code for the "Description" TinyMCE editor
+    And I add "<add" to the source code for the "Description" TinyMCE editor
     And I press enter
-    
+    And I should see this multiline source code for the "Description" TinyMCE editor:
+      """
+      <p>This is my draft</p>
+      <address
+      """
+    And I add ">" to the source code for the "Description" TinyMCE editor
+    Then I should see this multiline source code for the "Description" TinyMCE editor:
+      """
+      <p>This is my draft</p>
+      <address></address>
+      """
