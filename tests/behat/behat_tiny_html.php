@@ -23,13 +23,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use Behat\Behat\Hook\Scope\BeforeScenarioScope;
-use Behat\Mink\Element\NodeElement;
-use Behat\Mink\Exception\DriverException;
 use Behat\Mink\Exception\ExpectationException;
+use Behat\Gherkin\Node\{PyStringNode};
 
 // NOTE: no MOODLE_INTERNAL test here, this file may be required by behat before including /config.php.
-require_once(__DIR__ . '/../../../../tests/behat/behat_editor_tiny.php');
+require_once(__DIR__ . '/../../../../tests/behat/editor_tiny_helpers.php');
+require_once(__DIR__ . '/../../../../../../behat/behat_base.php');
 
 /**
  * TinyMCE HTML plugin custom behat steps definitions.
@@ -38,11 +37,14 @@ require_once(__DIR__ . '/../../../../tests/behat/behat_editor_tiny.php');
  * @category   test
  * @copyright  2023 Matt Porritt <matt.porritt@moodle.com>
  */
-class behat_tiny_html extends behat_editor_tiny {
+class behat_tiny_html extends behat_base {
+    use editor_tiny_helpers;
     /**
-     * Select the element type/index for the specified TinyMCE editor.
+     * Gets the specified formatted single source code from the editor
+     * and compares it to what is expected.
      *
      * @When /^I should see "(?P<textlocator_string>(?:[^"]|\\")*)" source code for the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor$/
+     * @throws ExpectationException
      * @param string $textlocator The type of element to select (for example `p` or `span`)
      * @param string $locator The editor to select within
      */
@@ -57,26 +59,56 @@ class behat_tiny_html extends behat_editor_tiny {
         $js = <<<EOF
             const container = document.getElementById('codeMirrorContainer');
             const shadowRoot = container.shadowRoot;
-            var allNodes = shadowRoot.querySelectorAll('*');
-            var textToFind = "This is my draft";
-            var foundElement = null;
-            
-            allNodes.forEach(function(node) {
-              if (node.textContent.includes(textToFind)) {
-                foundElement = node;
-              }
-            });
-            
-            if (foundElement) {
-              resolve('Text found in element: ' + foundElement.tagName);
+            const sourceCode = shadowRoot.querySelector('.modal-codemirror-container [contenteditable="true"]').innerText
+            const textToFind = '$textlocator';
+
+            if (sourceCode == textToFind) {
+              resolve(true);
             } else {
-              resolve('Text not found.');
+              resolve(false);
             }
         EOF;
 
-        $result = $this->evaluate_javascript_for_editor($editorid, $js);;
-        error_log($result);
-
+        $result = $this->evaluate_javascript_for_editor($editorid, $js);
+        if ($result != 'true') {
+            throw new ExpectationException("Source code is not formatted as expected.", $this->getSession());
+        }
     }
 
+    /**
+     * Gets the specified formatted multiline source code from the editor
+     * and compares it to what is expected.
+     *
+     * @when /^I should see this multiline source code for the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor:$/
+     * @throws ExpectationException
+     * @param string $locator
+     * @param PyStringNode $sourcecode
+     * @return void
+     */
+    public function get_multiline_source_code(string $locator, PyStringNode $sourcecode): void {
+        $this->require_tiny_tags();
+
+        $editor = $this->get_textarea_for_locator($locator);
+        $editorid = $editor->getAttribute('id');
+        error_log($editorid);
+
+        // We need to traverse the shadow dom to get the source code.
+        $js = <<<EOF
+            const container = document.getElementById('codeMirrorContainer');
+            const shadowRoot = container.shadowRoot;
+            const sourceCode = shadowRoot.querySelector('.modal-codemirror-container [contenteditable="true"]').innerText
+            const textToFind = `$sourcecode`;
+
+            if (sourceCode == textToFind) {
+              resolve(true);
+            } else {
+              resolve(false);
+            }
+        EOF;
+
+        $result = $this->evaluate_javascript_for_editor($editorid, $js);
+        if ($result != 'true') {
+            throw new ExpectationException("Source code is not indented as expected.", $this->getSession());
+        }
+    }
 }
