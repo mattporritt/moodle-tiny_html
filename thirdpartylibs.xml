@@ -8,4 +8,12 @@
     <license>MIT</license>
     <repository>https://github.com/codemirror/</repository>
   </library>
+  <library>
+    <location>amd/src/beautify</location>
+    <name>js-beautify</name>
+    <description>Beautifier for javascript.</description>
+    <version>1.14.8</version>
+    <license>MIT</license>
+    <repository>https://github.com/beautify-web/js-beautify/</repository>
+  </library>
 </libraries>
