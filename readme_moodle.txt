@@ -1,12 +1,31 @@
-Description of adding JS-Beautify and CodeMirror libraries into Moodle.
+Description of updating JS-Beautify and CodeMirror libraries into Moodle.
 
-npm install --save @codemirror/basic-setup @codemirror/lang-xml
+There is a build script that should automate the process of updating the libraries.
+It is located in the build directory and is called build.sh.
+It requires the following pre-requisites: jq, npm and npx.
+Most Moodle LMS development systems should have at least npm and npx installed.
+However, jq is not a common tool and may need to be installed separately.
 
+For example, on Ubuntu you would use:
+sudo apt-get install jq
 
-Description of importing the js-beautify library into Moodle.
+And on macOS with Homebrew:
+brew install jq
 
-* Download the latest version from https://github.com/beautify-web/js-beautify/releases
-* Copy lib/beautify*.js into lib/editor/tiny/plugins/html/amd/src/beautify
-* Copy LICENSE into lib/editor/atto/plugins/html/yui/src/beautify
-* Update lib/editor/atto/plugins/html/thirdpartylibs.xml
-* Rebuild the module
+Once you have the pre-requisites installed, you can run the build script.
+from the root of the plugin (e.g lib/editor/tiny/plugins/html), run:
+./build/build.sh
+
+Once the script has run, you should see the following files updated:
+* lib/editor/tiny/plugins/html/amd/src/beautify/beautify.js
+* lib/editor/tiny/plugins/html/amd/src/beautify/beautify-css.js
+* lib/editor/tiny/plugins/html/amd/src/beautify/beautify-html.js
+* lib/editor/tiny/plugins/html/amd/src/codemirror/codemirror-lazy.js
+
+Next, you need to run the build script for the Moodle plugin.
+From the root of the plugin (e.g lib/editor/tiny/plugins/html), run:
+cd amd
+grunt
+
+Once the process is complete update thirdpartylibs.xml with the new version numbers.
+

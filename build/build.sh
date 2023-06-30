@@ -36,11 +36,16 @@ TEMP_DIR=$(mktemp -d)
 # Extract the .zip file to the temporary directory.
 unzip -q latest_release.zip -d $TEMP_DIR
 
-# Move the js-beautify files to the correct location.
-cp -v $TEMP_DIR/lib/beautify*.js ../amd/src/beautify
+# Find the subdirectory that starts with "beautify"
+SUB_DIR=$(find $TEMP_DIR -type d -name "beautify*" | head -n 1)
+
+# Copy the js-beautify files to the correct location.
+cp -v $SUB_DIR/js/lib/beautify*.js ../amd/src/beautify
 
 # Copy the License file to the correct location.
-cp -v $TEMP_DIR/LICENSE ../amd/src/beautify/LICENSE
+cp -v $SUB_DIR/LICENSE ../amd/src/beautify/LICENSE
 
-# Remove the temporary directory.
+# Remove the temporary directory, node_modules directory and the js-beautify zip.
 rm -rf $TEMP_DIR
+rm -rf node_modules
+rm latest_release.zip
