@@ -39,27 +39,21 @@ require_once(__DIR__ . '/../../../../../../behat/behat_base.php');
  */
 class behat_tiny_html extends behat_base {
     use editor_tiny_helpers;
+
     /**
-     * Gets the specified formatted single source code from the editor
-     * and compares it to what is expected.
+     * Get Javascript to navigate to the shadow DOM of the editor,
+     * and find specified sourcecode text.
      *
-     * @When /^I should see "(?P<textlocator_string>(?:[^"]|\\")*)" source code for the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor$/
-     * @throws ExpectationException
-     * @param string $textlocator The type of element to select (for example `p` or `span`)
-     * @param string $locator The editor to select within
+     * @param string $editorid The editor id to search within.
+     * @param string $sourcecode The sourcecode to find.
+     * @return string The Javascript to execute.
      */
-    public function get_source_code(string $textlocator, string $locator): void {
-        $this->require_tiny_tags();
-
-        $editor = $this->get_textarea_for_locator($locator);
-        $editorid = $editor->getAttribute('id');
-
-        // Ensure that a name is set on the iframe relating to the editorid.
-        $js = <<<EOF
-            const container = document.getElementById('codeMirrorContainer');
+    protected function get_javascript_sourcecode_search(string $editorid, string $sourcecode): string {
+        return <<<EOF
+            const container = document.getElementById('{$editorid}_codeMirrorContainer');
             const shadowRoot = container.shadowRoot;
             const sourceCode = shadowRoot.querySelector('.modal-codemirror-container [contenteditable="true"]').innerText
-            const textToFind = '$textlocator';
+            const textToFind = `$sourcecode`;
 
             if (sourceCode == textToFind) {
               resolve(true);
@@ -67,10 +61,26 @@ class behat_tiny_html extends behat_base {
               resolve(false);
             }
         EOF;
+    }
 
-        $result = $this->evaluate_javascript_for_editor($editorid, $js);
-        if ($result != 'true') {
-            throw new ExpectationException("Source code is not formatted as expected.", $this->getSession());
+    /**
+     * Gets the specified formatted single line source code from the editor
+     * and compares it to what is expected.
+     *
+     * @When /^I should see "(?P<sourcecodelocator_string>(?:[^"]|\\")*)" source code for the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor$/
+     * @throws ExpectationException
+     * @param string $sourcecode The type of element to select (for example `p` or `span`)
+     * @param string $locator The editor to select within
+     */
+    public function get_source_code(string $sourcecode, string $locator): void {
+        $this->require_tiny_tags();
+
+        $editor = $this->get_textarea_for_locator($locator);
+        $editorid = $editor->getAttribute('id');
+        $js = $this->get_javascript_sourcecode_search($editorid, $sourcecode);
+
+         if ($this->evaluate_javascript_for_editor($editorid, $js) != 'true') {
+            throw new ExpectationException("Source code does not match expected.", $this->getSession());
         }
     }
 
@@ -89,59 +99,10 @@ class behat_tiny_html extends behat_base {
 
         $editor = $this->get_textarea_for_locator($locator);
         $editorid = $editor->getAttribute('id');
+        $js = $this->get_javascript_sourcecode_search($editorid, $sourcecode);
 
-        // We need to traverse the shadow dom to get the source code.
-        $js = <<<EOF
-            const container = document.getElementById('codeMirrorContainer');
-            const shadowRoot = container.shadowRoot;
-            const sourceCode = shadowRoot.querySelector('.modal-codemirror-container [contenteditable="true"]').innerText
-            const textToFind = `$sourcecode`;
-
-            if (sourceCode == textToFind) {
-              resolve(true);
-            } else {
-              resolve(false);
-            }
-        EOF;
-
-        $result = $this->evaluate_javascript_for_editor($editorid, $js);
-        if ($result != 'true') {
+        if ($this->evaluate_javascript_for_editor($editorid, $js) != 'true') {
             throw new ExpectationException("Source code is not indented as expected.", $this->getSession());
         }
-    }
-
-    /**
-     * Appends source code to the editor.
-     *
-     * @Then /^I add "(?P<textlocator_string>(?:[^"]|\\")*)" to the source code for the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor$/
-     * @param string $textlocator
-     * @param string $locator
-     * @return void
-     */
-    public function append_source_code(string $textlocator, string $locator): void {
-        $this->require_tiny_tags();
-
-        $editor = $this->get_textarea_for_locator($locator);
-        $editorid = $editor->getAttribute('id');
-        error_log($editorid);
-        error_log($textlocator);
-
-        // We need to traverse the shadow dom to get the source code.
-        $js = <<<EOF
-            const container = document.getElementById('codeMirrorContainer');
-            const shadowRoot = container.shadowRoot;
-            const codemirrorParent = shadowRoot.querySelector('.modal-codemirror-container');
-            var codeMirrorInstance = codemirrorParent.codeMirrorInstance;
-            var newContent = "$textlocator";
-            var tr = codeMirrorInstance.state.update({changes: { from: codeMirrorInstance.state.doc.length, insert: newContent }}); 
-            codeMirrorInstance.update([tr]);
-
-            shadowRoot.querySelector('.modal-codemirror-container [contenteditable="true"]').focus();
-
-            resolve(shadowRoot.querySelector('.modal-codemirror-container [contenteditable="true"]').innerText );
-        EOF;
-
-        $result = $this->evaluate_javascript_for_editor($editorid, $js);
-        error_log($result);
     }
 }

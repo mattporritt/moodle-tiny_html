@@ -44,27 +44,7 @@ const beautifyOptions = {
     unformatted: [],
 };
 
-/**
- * Initial configuration for TinyMCE editor the windowManager.
- */
-const windowManagerConfig = {
-    title: 'Source code',
-    size: 'large',
-    body: {
-        type: 'panel',
-        items: [
-            {
-                type: 'htmlpanel',
-                html: '<div id="codeMirrorContainer" style="height: 100%;"></div>',
-            },
-        ],
-    },
-    buttons: null,
-    initialData: null,
-    onSubmit: null,
-};
-
-// Setup the tiny_html Plugin.
+// Set up the tiny_html Plugin.
 export default new Promise(async(resolve) => {
     // Note: The PluginManager.add function does not support asynchronous configuration.
     // Perform any asynchronous configuration here, and then call the PluginManager.add function.
@@ -83,6 +63,24 @@ export default new Promise(async(resolve) => {
 
     // Reminder: Any asynchronous code must be run before this point.
     tinyMCE.PluginManager.add(pluginName, (editor) => {
+        // Initial configuration for TinyMCE editor the windowManager.
+        const windowManagerConfig = {
+            title: 'Source code',
+            size: 'large',
+            body: {
+                type: 'panel',
+                items: [
+                    {
+                        type: 'htmlpanel',
+                        html: '<div id="' + editor.id + '_codeMirrorContainer" style="height: 100%;"></div>',
+                    },
+                ],
+            },
+            buttons: null,
+            initialData: null,
+            onSubmit: null,
+        };
+
         // Overriding the default 'mceCodeEditor' command
         editor.addCommand('mceCodeEditor', () => {
             // Get the current content of the editor
@@ -126,7 +124,7 @@ export default new Promise(async(resolve) => {
                 ]
             });
 
-            const container = document.getElementById('codeMirrorContainer');
+            const container = document.getElementById(editor.id + '_codeMirrorContainer');
             // Create a shadow root for the CodeMirror instance.
             // This is required to prevent the TinyMCE editor styles from overriding the CodeMirror ones.
             const shadowRoot = container.attachShadow({mode: "open"});
@@ -146,9 +144,6 @@ export default new Promise(async(resolve) => {
                 state,
                 parent: div,
             });
-
-            // Attach the instance to the parent DOM element
-            div.codeMirrorInstance = cmInstance;
 
             // Add an event listener to the shadow root to listen for the tab key press.
             shadowRoot.addEventListener('keydown', (event) => {
